@@ -1,61 +1,56 @@
 import streamlit as st
 from bd import *
+import pandas as pd
 
 st.set_page_config(layout="wide")
-st.title("Consultas")
 
-def execute_query(query, args=None):
-    try:
-        cursor = connection.cursor()
+# Função para executar consultas SQL e retornar os resultados
+def executar_consulta(consulta):
+    conn = connection
+    cursor = conn.cursor()
 
-        if args:
-            cursor.execute(query, args)
+    cursor.execute(consulta)
+
+    resultados = cursor.fetchall()
+    colunas = [i[0] for i in cursor.description]
+
+    if resultados:
+        df = pd.DataFrame(resultados, columns=colunas)
+        return df
+    else:
+        return pd.DataFrame()  # Retorna um DataFrame vazio quando não há resultados
+
+# Função para criar a consulta SQL com base nas tabelas e colunas selecionadas
+def criar_consulta(tabelas, colunas):
+    consulta = "SELECT "
+    consulta += ", ".join(colunas)
+    consulta += " FROM "
+    consulta += ", ".join(tabelas)
+    consulta += ";"
+
+    return consulta
+
+# Interface da aplicação Streamlit
+def main():
+    st.title("Consulta Relacional Interativa")
+
+    st.subheader("Selecionar Tabelas e Colunas")
+    tabelas = st.multiselect("Selecione as tabelas", ["funcionario", "departamento", "dependente"])
+    colunas = st.multiselect("Selecione as colunas", ["*"] + ["Pnome", "Minicial", "Unome", "Cpf", 
+                                                              "Datanasc", "Endereco", "Sexo",
+                                                              "Salario","Cpf_supervisor","Dnr",
+                                                              "Fcpf","Nome_dependente","Datanasc","Parentesco",
+                                                              "Dnome", "Dnumero", "Cpf_gerente", "Data_inicio_gerente"])
+
+    if st.button("Executar Consulta"):
+        consulta_sql = criar_consulta(tabelas, colunas)
+        resultados = executar_consulta(consulta_sql)
+
+        if not resultados.empty:  # Verifica se o DataFrame não está vazio
+            st.write("Resultados da Consulta:")
+            st.dataframe(resultados)
         else:
-            cursor.execute(query)
+            st.write("Nenhum resultado encontrado.")
 
-        results = cursor.fetchall()
-
-        connection.commit()
-        return results
-    except Exception as e:
-        st.error(f"Erro na consulta: {str(e)}")
-
-
-# Título do aplicativo Streamlit
-st.title("Consultas Relacionais em MySQL")
-
-# Widget de seleção do tipo de consulta
-consulta = st.selectbox("Selecione o tipo de consulta:", ["Funcionários por Departamento", 
-                                                          "Dependentes por Funcionário", 
-                                                          'Funcionários por departamento por dependente'])
-
-if consulta == "Funcionários por Departamento":
-    # Consulta SQL: Funcionários por Departamento
-    query = """
-        SELECT F.Pnome, F.Unome, D.Dnome
-        FROM FUNCIONARIO F
-        JOIN DEPARTAMENTO D ON F.Dnr = D.Dnumero;
-    """
-
-elif consulta == "Dependentes por Funcionário":
-    # Consulta SQL: Dependentes por Funcionário
-    query = """
-        SELECT F.Pnome, F.Unome, DD.Nome_dependente
-        FROM FUNCIONARIO F
-        LEFT JOIN DEPENDENTE DD ON F.Cpf = DD.Fcpf;
-    """
-
-elif consulta == 'Funcionários por departamento por dependente':
-    query = """
-    SELECT F.Pnome, F.Unome, D.Dnome, DD.Nome_dependente
-    FROM FUNCIONARIO F
-    JOIN DEPARTAMENTO D ON F.Dnr = D.Dnumero
-    LEFT JOIN DEPENDENTE DD ON F.Cpf = DD.Fcpf;
-"""
-
-
-# Executar a consulta SQL
-results = execute_query(query)
-
-# Exibir os resultados em uma tabela
-st.table(results)
+if __name__ == "__main__":
+    main()
