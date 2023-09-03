@@ -1,10 +1,10 @@
 import mysql.connector
 import streamlit as st
 connection = mysql.connector.connect(
-        host='localhost',
+        host='127.0.0.1',
         user='root',
-        password='senha_aqui',
-        database='banco_aqui'
+        password='saltitao1',
+        database='empresa_iaad'
     )
 cursor = connection.cursor()
 
