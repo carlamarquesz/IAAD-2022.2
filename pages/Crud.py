@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(layout="wide")
 st.title("Operações de CRUD")
 
-aba1, aba2, aba3, aba4 = st.tabs(["Insert", "Select", "Update", "Delete"])
+aba1, aba2, aba3, aba4, aba5 = st.tabs(["Insert", "Select", "Update", "Delete","teste update"])
 
 inputs = {
     'FUNCIONARIO': ['Pnome', 'Minicial', 'Unome', 'Cpf', 'Datanasc', 'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'],
@@ -70,23 +70,67 @@ def main():
             st.write("Nenhum resultado encontrado.")
 
     with aba3:
-        menu_input = inputs.get(control_panel)
-        
-        if menu_input:
-            st.header(f"Atualize os dados em {control_panel}")
+        st.title("atualização dos dados")
+        if control_panel:
+            # Consulta SQL para obter as chaves primárias da tabela selecionada
+            consulta_chaves = f"SHOW KEYS FROM {control_panel} WHERE Key_name = 'PRIMARY'"
+            conn = connection
+            chaves_primarias = pd.read_sql(consulta_chaves, conn)
+            chaves_primarias = chaves_primarias["Column_name"].tolist()
 
-            old_values = [st.text_input(f'{old_field} Antigo ({old_field}):') for old_field in menu_input]
-            st.header('Atualizar dados')
-            new_values = [st.text_input(f'Novo {new_field} ({new_field}):') for new_field in menu_input]
+            # Barra de seleção única para escolher a chave primária
+            chave_primaria_selecionada = st.selectbox("Selecione a chave primária para atualizar:", chaves_primarias)
 
-            if st.button('Atualizar Registro'):
-                if all(old_values) and all(new_values):
-                    update_operation(control_panel, menu_input, old_values, new_values)
+            if chave_primaria_selecionada:
+                st.sidebar.header(f"Atualizar registros em '{control_panel}'")
+
+                # Consulta SQL para obter todos os valores únicos da chave primária
+                consulta_valores_chave = f"SELECT DISTINCT {chave_primaria_selecionada} FROM {control_panel}"
+                conn = connection
+                valores_chave = pd.read_sql(consulta_valores_chave, conn)
+                valores_chave = valores_chave[chave_primaria_selecionada].tolist()
+
+                # Barra de seleção única para escolher o valor da chave primária
+                valor_chave_selecionado = st.selectbox(f"Selecione o valor da chave primária para atualizar em '{control_panel}':", valores_chave)
+
+                if valor_chave_selecionado:
+                    # Consulta SQL para obter os dados do funcionário selecionado
+                    consulta_dados = f"SELECT * FROM {control_panel} WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
+                    conn = connection
+                    dados_funcionario = pd.read_sql(consulta_dados, conn)
+
+                    if not dados_funcionario.empty:
+                        st.write(f"Registro selecionado: {dados_funcionario.iloc[0]}")
+
+                        st.subheader("Atualizar Dados")
+                        # Aqui, você pode adicionar campos de entrada de texto para cada coluna que deseja atualizar
+                        colunas = dados_funcionario.columns
+                        colunas_atualizar = st.multiselect("Escolha as colunas para atualizar:", colunas)
+                        
+                        for coluna in colunas_atualizar:
+                            novo_valor = st.text_input(f"Novo valor para '{coluna}':", dados_funcionario.iloc[0][coluna])
+                            dados_funcionario.loc[0, coluna] = novo_valor
+
+                        if st.button("Atualizar Dados"):
+                            # Montar a consulta de atualização dinamicamente
+                            consulta_atualizacao = f"UPDATE {control_panel} SET "
+                            for coluna in colunas_atualizar:
+                                valor_atual = dados_funcionario.iloc[0][coluna]
+                                consulta_atualizacao += f"{coluna} = '{valor_atual}', "
+                            consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
+                            consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
+                            executar_consulta(consulta_atualizacao)
+                            st.success("Dados do funcionário atualizados com sucesso!")
+                    else:
+                        st.warning("Selecione pelo menos uma coluna para atualizar.")
                 else:
-                    st.warning('Por favor, preencha todos os campos corretamente para atualizar.')
-
+                    st.warning("Registro não encontrado.")
+            else:
+                st.warning("Selecione um valor da chave primária.")
         else:
-            st.warning(f"Menu '{control_panel}' não encontrado nas opções de menu disponíveis.")
+            st.warning("Selecione uma chave primária.")
+
+    
 
     with aba4:
         st.header(f"Delete dados em {control_panel}")
@@ -95,5 +139,7 @@ def main():
             if delete_values:
                 delete_operation(control_panel, delete_values, delete_field)
 
+    
+            
 if __name__ == "__main__":
     main()
