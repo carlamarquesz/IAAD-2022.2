@@ -134,7 +134,6 @@ def main():
     with aba4:
         st.title("Remover")
         if control_panel:
-            st.sidebar.header(f"Deletar registros em '{control_panel}'")
 
             # Consulta SQL para obter as chaves primárias da tabela selecionada
             consulta_chaves1 = f"SHOW KEYS FROM {control_panel} WHERE Key_name = 'PRIMARY'"
