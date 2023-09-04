@@ -1,5 +1,6 @@
 import mysql.connector
 import streamlit as st
+import pandas as pd
 
 connection = mysql.connector.connect(
         host='127.0.0.1',
@@ -78,7 +79,33 @@ def view_tables(cursor):
     return [row[0] for row in tabelas]
 
 
+def executar_consulta(consulta):
+    conn = connection
+    cursor = conn.cursor()
 
+    cursor.execute(consulta)
 
+    resultados = cursor.fetchall()
+    colunas = [i[0] for i in cursor.description]
 
+    if resultados:
+        df = pd.DataFrame(resultados, columns=colunas)
+        return df
+    else:
+        return pd.DataFrame()  # Retorna um DataFrame vazio quando não há resultados
 
+def criar_consulta_relacional(tabelas, colunas):
+    consulta = "SELECT "
+    consulta += ", ".join(colunas)
+    consulta += " FROM "
+    consulta += ", ".join(tabelas)
+    consulta += ";"
+
+    return consulta
+
+def criar_consulta(tabela, colunas):
+    consulta = "SELECT "
+    consulta += ", ".join(colunas)
+    consulta += " FROM " + tabela
+
+    return consulta

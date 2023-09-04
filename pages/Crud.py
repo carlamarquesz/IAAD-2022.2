@@ -1,6 +1,6 @@
 import streamlit as st
 from bd import *
-
+import pandas as pd
 st.set_page_config(layout="wide")
 st.title("Operações de CRUD")
 
@@ -41,6 +41,33 @@ def main():
             insert_values, insert_field = forms(inputs.get(control_panel, []), 'Inserir')
             if insert_values:
                 insert_operation(control_panel, insert_values, insert_field)
+
+    with aba2:
+        st.title("Consultas")
+        if control_panel == 'funcionario':
+            control_panel = 'funcionario'
+            colunas = st.multiselect("selecione as colunas",['*']+['Pnome', 
+                                     'Minicial', 'Unome', 'Cpf', 'Datanasc', 
+                                     'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'])
+        elif control_panel == 'departamento':
+            control_panel = 'departamento'
+            colunas = st.multiselect("Selecione as colunas",['*'] + ['Dnome', 'Dnumero', 
+                                                                     'Cpf_gerente', 'Data_inicio_gerente'])
+            
+            
+        elif control_panel == 'dependente':
+            control_panel = 'dependente'
+            colunas = st.multiselect("Selecione as colunas", ['*'] + ['Fcpf', 'Nome_dependente', 
+                                                                      'Sexo', 'Datanasc', 'Parentesco'])
+        
+        if st.button("Executar Consulta"):
+            consulta_sql = criar_consulta(control_panel, colunas)
+            resultados = executar_consulta(consulta_sql)
+            
+            st.write("Resultados da Consulta:")
+            st.dataframe(resultados)
+        else:
+            st.write("Nenhum resultado encontrado.")
 
     with aba3:
         menu_input = inputs.get(control_panel)
