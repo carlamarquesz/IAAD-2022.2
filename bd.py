@@ -118,5 +118,14 @@ def executar_consulta_(consulta):
 
     conn.commit()
 
-    cursor.close()
-    conn.close()
+def deletar_registro(tabela, chave_primaria, valor_chave):
+    consulta_deletar = f"DELETE FROM {tabela} WHERE {chave_primaria} = '{valor_chave}'"
+    conn = connection
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(consulta_deletar)
+        conn.commit()
+        st.success(f"Registro com {chave_primaria} igual a '{valor_chave}' deletado com sucesso.")
+    except mysql.connector.Error as err:
+        st.error(f"Erro ao deletar registro: {err}")

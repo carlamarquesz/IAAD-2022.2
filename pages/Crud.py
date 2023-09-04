@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(layout="wide")
 st.title("Operações de CRUD")
 
-aba1, aba2, aba3, aba4, aba5 = st.tabs(["Insert", "Select", "Update", "Delete","teste update"])
+aba1, aba2, aba3, aba4 = st.tabs(["Insert", "Select", "Update", "Delete"])
 
 inputs = {
     'FUNCIONARIO': ['Pnome', 'Minicial', 'Unome', 'Cpf', 'Datanasc', 'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'],
@@ -82,7 +82,6 @@ def main():
             chave_primaria_selecionada = st.selectbox("Selecione a chave primária para atualizar:", chaves_primarias)
 
             if chave_primaria_selecionada:
-                st.sidebar.header(f"Atualizar registros em '{control_panel}'")
 
                 # Consulta SQL para obter todos os valores únicos da chave primária
                 consulta_valores_chave = f"SELECT DISTINCT {chave_primaria_selecionada} FROM {control_panel}"
@@ -133,13 +132,53 @@ def main():
     
 
     with aba4:
-        st.header(f"Delete dados em {control_panel}")
+        st.title("Remover")
         if control_panel:
-            delete_values, delete_field = forms(inputs.get(control_panel, []), 'Delete')
-            if delete_values:
-                delete_operation(control_panel, delete_values, delete_field)
+            st.sidebar.header(f"Deletar registros em '{control_panel}'")
 
-    
+            # Consulta SQL para obter as chaves primárias da tabela selecionada
+            consulta_chaves1 = f"SHOW KEYS FROM {control_panel} WHERE Key_name = 'PRIMARY'"
+            conn = connection
+            cursor.execute(consulta_chaves1)
+            chaves_primarias1 = [row[4] for row in cursor.fetchall()]
+
+            chave_primaria_selecionada1 = st.selectbox("Selecione a chave primária:", chaves_primarias1)
+
+            if chave_primaria_selecionada1:
+                # Consulta SQL para listar todos os valores da chave primária
+                consulta_valores_chave1 = f"SELECT DISTINCT {chave_primaria_selecionada1} FROM {control_panel}"
+                conn = connection
+                cursor.execute(consulta_valores_chave1)
+                valores_chave1 = [row[0] for row in cursor.fetchall()]
+
+                valor_chave_selecionado1 = st.selectbox(f"Selecione o valor da chave primária para deletar em '{control_panel}':", valores_chave1)
+
+                if valor_chave_selecionado1:
+                    # Consulta SQL para obter os dados completos do registro
+                    consulta_dados = f"SELECT * FROM {control_panel} WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
+                    conn = connection
+                    cursor.execute(consulta_dados)
+                    dados_funcionario1 = cursor.fetchall()
+                    
+
+                    if dados_funcionario1:
+                        st.write(f"Registro selecionado: {dados_funcionario1[0]}")
+
+                        colunas1 = [desc[0] for desc in cursor.description]
+                        coluna_selecionada1 = st.selectbox("Selecione a coluna a ser deletada:", colunas1)
+
+                        if st.button("Deletar Coluna"):
+                            # Consulta SQL para deletar a coluna específica
+                            consulta_deletar_coluna = f"UPDATE {control_panel} SET {coluna_selecionada1} = NULL WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
+                            executar_consulta_(consulta_deletar_coluna)
+                            st.success(f"Coluna '{coluna_selecionada1}' deletada com sucesso do registro com {chave_primaria_selecionada1} igual a '{valor_chave_selecionado1}' em '{control_panel}'.")
+                    else:
+                        st.warning("Registro não encontrado.")
+                else:
+                    st.warning("Selecione um valor da chave primária.")
+            else:
+                st.warning("Selecione uma chave primária.")
+        
             
 if __name__ == "__main__":
     main()
