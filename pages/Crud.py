@@ -36,55 +36,63 @@ def main():
     control_panel = st.sidebar.radio("Opções:", tabelas)
 
     with aba1:
+        campos = []
         st.header(f"Inserir dados em {control_panel}")
-        if control_panel == 'funcionario':
+        if control_panel == 'FUNCIONARIO':
             campos = {'Pnome', 'Minicial', 'Unome', 'Cpf', 
                       'Datanasc', 'Endereco', 'Sexo', 'Salario', 
                       'Cpf_supervisor', 'Dnr'}
-        elif control_panel == 'departamento':
+        elif control_panel == 'DEPARTAMENTO':
             campos = {'Dnome', 'Dnumero', 'Cpf_gerente', 'Data_inicio_gerente'}
-        elif control_panel == 'dependente':
+        elif control_panel == 'DEPENDENTE':
             campos = {'Fcpf', 'Nome_dependente', 'Sexo', 'Datanasc', 'Parentesco'}
         campos_insert = {}
         for campo in campos:  # Substitua com seus campos
             valor = st.text_input(f"{campo.capitalize()}:")
             campos_insert[campo] = valor
 
-        if st.button("Inserir Dados"):
-            if all(campos_insert.values()):
-                inserir_dados(control_panel, campos_insert)
-                st.success(f"Dados inseridos com sucesso em '{control_panel}': {campos_insert}")
-            else:
-                st.warning("Preencha todos os campos.")
+        try:
+            if st.button("Inserir Dados"):
+                if all(campos_insert.values()):
+                    inserir_dados(control_panel, campos_insert)
+                    st.success(f"Dados inseridos com sucesso em '{control_panel}': {campos_insert}")
+                else:
+                    st.warning("Preencha todos os campos.")
+        except Exception as e:
+            st.error(f"Ocorreu um erro: {e}")
 
             
 
     with aba2:
         st.title("Consultas")
-        if control_panel == 'funcionario':
-            control_panel = 'funcionario'
+        if control_panel == 'FUNCIONARIO':
+            control_panel = 'FUNCIONARIO'
             colunas = st.multiselect("selecione as colunas",['*']+['Pnome', 
                                      'Minicial', 'Unome', 'Cpf', 'Datanasc', 
                                      'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'])
-        elif control_panel == 'departamento':
-            control_panel = 'departamento'
+        elif control_panel == 'DEPARTAMENTO':
+            control_panel = 'DEPARTAMENTO'
             colunas = st.multiselect("Selecione as colunas",['*'] + ['Dnome', 'Dnumero', 
                                                                      'Cpf_gerente', 'Data_inicio_gerente'])
             
             
-        elif control_panel == 'dependente':
-            control_panel = 'dependente'
+        elif control_panel == 'DEPENDENTE':
+            control_panel = 'DEPENDENTE'
             colunas = st.multiselect("Selecione as colunas", ['*'] + ['Fcpf', 'Nome_dependente', 
                                                                       'Sexo', 'Datanasc', 'Parentesco'])
         
-        if st.button("Executar Consulta"):
-            consulta_sql = criar_consulta(control_panel, colunas)
-            resultados = executar_consulta(consulta_sql)
+        try:
+            if st.button("Executar Consulta"):
+                consulta_sql = criar_consulta(control_panel, colunas)
+                resultados = executar_consulta(consulta_sql)
+                
+                st.write("Resultados da Consulta:")
+                st.dataframe(resultados)
+            else:
+                st.write("Nenhum resultado encontrado.")
             
-            st.write("Resultados da Consulta:")
-            st.dataframe(resultados)
-        else:
-            st.write("Nenhum resultado encontrado.")
+        except Exception as e:
+            st.error(f"Ocorreu um erro na consulta: {e}")
 
     with aba3:
         st.title("atualização dos dados")
@@ -126,17 +134,19 @@ def main():
                         for coluna in colunas_atualizar:
                             novo_valor = st.text_input(f"Novo valor para '{coluna}':", dados_funcionario.iloc[0][coluna])
                             dados_funcionario.loc[0, coluna] = novo_valor
-
-                        if st.button("Atualizar Dados"):
-                            # Montar a consulta de atualização dinamicamente
-                            consulta_atualizacao = f"UPDATE {control_panel} SET "
-                            for coluna in colunas_atualizar:
-                                valor_atual = dados_funcionario.iloc[0][coluna]
-                                consulta_atualizacao += f"{coluna} = '{valor_atual}', "
-                            consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
-                            consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
-                            executar_consulta_(consulta_atualizacao)
-                            st.success("Dados do funcionário atualizados com sucesso!")
+                        try: 
+                            if st.button("Atualizar Dados"):
+                                # Montar a consulta de atualização dinamicamente
+                                consulta_atualizacao = f"UPDATE {control_panel} SET "
+                                for coluna in colunas_atualizar:
+                                    valor_atual = dados_funcionario.iloc[0][coluna]
+                                    consulta_atualizacao += f"{coluna} = '{valor_atual}', "
+                                consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
+                                consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
+                                executar_consulta_(consulta_atualizacao)
+                                st.success("Dados do funcionário atualizados com sucesso!")
+                        except Exception as e:
+                                st.error(f"Ocorreu um erro na atualização: {e}")
                     else:
                         st.warning("Selecione pelo menos uma coluna para atualizar.")
                 else:
@@ -183,11 +193,14 @@ def main():
                         colunas1 = [desc[0] for desc in cursor.description]
                         coluna_selecionada1 = st.selectbox("Selecione a coluna a ser deletada:", colunas1)
 
-                        if st.button("Deletar Coluna"):
-                            # Consulta SQL para deletar a coluna específica
-                            consulta_deletar_coluna = f"UPDATE {control_panel} SET {coluna_selecionada1} = NULL WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
-                            executar_consulta_(consulta_deletar_coluna)
-                            st.success(f"Coluna '{coluna_selecionada1}' deletada com sucesso do registro com {chave_primaria_selecionada1} igual a '{valor_chave_selecionado1}' em '{control_panel}'.")
+                        try:
+                            if st.button("Deletar Coluna"):
+                                # Consulta SQL para deletar a coluna específica
+                                consulta_deletar_coluna = f"UPDATE {control_panel} SET {coluna_selecionada1} = NULL WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
+                                executar_consulta_(consulta_deletar_coluna)
+                                st.success(f"Coluna '{coluna_selecionada1}' deletada com sucesso do registro com {chave_primaria_selecionada1} igual a '{valor_chave_selecionado1}' em '{control_panel}'.")
+                        except Exception as e:
+                                st.error(f"Ocorreu um erro na exclusão: {e}")
                     else:
                         st.warning("Registro não encontrado.")
                 else:
