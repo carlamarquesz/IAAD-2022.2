@@ -10,52 +10,6 @@ connection = mysql.connector.connect(
     )
 cursor = connection.cursor()
 
-
-def insert_operation(table, values, columns):
-    try:
-        placeholders = ', '.join(['%s'] * len(values))
-        query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders})"
-        cursor.execute(query, values)
-        st.success(f"Os dados foram inseridos com sucesso na tabela {table}!")
-        connection.commit()
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao inserir dados na tabela {table}: {err}")
-        connection.rollback()  
-
-
-def update_operation(tabela, campos, valores_antigos, valores_novos):
-    cursor = connection.cursor()
-
-    comando_atualizacao = f"UPDATE {tabela} SET "
-    atualizacoes = [f"{campo} = %s" for campo in campos]
-    comando_atualizacao += ', '.join(atualizacoes)
-    comando_atualizacao += " WHERE "
-    condicoes = [f"{campo} = %s" for campo in campos]
-    comando_atualizacao += ' AND '.join(condicoes)
-    
-    try:
-        cursor.execute(comando_atualizacao, valores_novos + valores_antigos)
-        connection.commit()
-        num_linhas_afetadas = cursor.rowcount
-        st.success(f"{num_linhas_afetadas} registro(s) atualizado(s) com sucesso.")
-
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao atualizar registro: {err}")
-        connection.rollback()
-
-
-def delete_operation(tabela, dados, campos):
-    if dados is not None:
-        delete_query = f"DELETE FROM {tabela} WHERE "
-        for campo, valor in zip(campos, dados):
-            delete_query += f"{campo} = '{valor}' AND "
-        
-        delete_query = delete_query[:-5]  # Remove o "AND" final
-        cursor.execute(delete_query)
-        st.success(f"Os dados foram excluídos com sucesso: {delete_query}")
-        connection.commit()
-
-
 # ler
 def read_operation(cursor, tabela):
     ler_tabela = tabela
@@ -129,3 +83,8 @@ def deletar_registro(tabela, chave_primaria, valor_chave):
         st.success(f"Registro com {chave_primaria} igual a '{valor_chave}' deletado com sucesso.")
     except mysql.connector.Error as err:
         st.error(f"Erro ao deletar registro: {err}")
+        
+def inserir_dados(tabela, campos):
+    campos_formatados = ", ".join([f"'{valor}'" for valor in campos.values()])
+    consulta_inserir = f"INSERT INTO {tabela} ({', '.join(campos.keys())}) VALUES ({campos_formatados})"
+    executar_consulta_(consulta_inserir)

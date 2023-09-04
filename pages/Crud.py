@@ -37,10 +37,27 @@ def main():
 
     with aba1:
         st.header(f"Inserir dados em {control_panel}")
-        if control_panel:
-            insert_values, insert_field = forms(inputs.get(control_panel, []), 'Inserir')
-            if insert_values:
-                insert_operation(control_panel, insert_values, insert_field)
+        if control_panel == 'funcionario':
+            campos = {'Pnome', 'Minicial', 'Unome', 'Cpf', 
+                      'Datanasc', 'Endereco', 'Sexo', 'Salario', 
+                      'Cpf_supervisor', 'Dnr'}
+        elif control_panel == 'departamento':
+            campos = {'Dnome', 'Dnumero', 'Cpf_gerente', 'Data_inicio_gerente'}
+        elif control_panel == 'dependente':
+            campos = {'Fcpf', 'Nome_dependente', 'Sexo', 'Datanasc', 'Parentesco'}
+        campos_insert = {}
+        for campo in campos:  # Substitua com seus campos
+            valor = st.text_input(f"{campo.capitalize()}:")
+            campos_insert[campo] = valor
+
+        if st.button("Inserir Dados"):
+            if all(campos_insert.values()):
+                inserir_dados(control_panel, campos_insert)
+                st.success(f"Dados inseridos com sucesso em '{control_panel}': {campos_insert}")
+            else:
+                st.warning("Preencha todos os campos.")
+
+            
 
     with aba2:
         st.title("Consultas")
