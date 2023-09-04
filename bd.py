@@ -109,3 +109,14 @@ def criar_consulta(tabela, colunas):
     consulta += " FROM " + tabela
 
     return consulta
+
+def executar_consulta_(consulta):
+    conn = connection
+    cursor = conn.cursor()
+
+    cursor.execute(consulta)
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()

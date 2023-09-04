@@ -119,7 +119,7 @@ def main():
                                 consulta_atualizacao += f"{coluna} = '{valor_atual}', "
                             consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
                             consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
-                            executar_consulta(consulta_atualizacao)
+                            executar_consulta_(consulta_atualizacao)
                             st.success("Dados do funcionário atualizados com sucesso!")
                     else:
                         st.warning("Selecione pelo menos uma coluna para atualizar.")
