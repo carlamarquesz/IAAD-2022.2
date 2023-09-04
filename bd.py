@@ -88,3 +88,7 @@ def inserir_dados(tabela, campos):
     campos_formatados = ", ".join([f"'{valor}'" for valor in campos.values()])
     consulta_inserir = f"INSERT INTO {tabela} ({', '.join(campos.keys())}) VALUES ({campos_formatados})"
     executar_consulta_(consulta_inserir)
+
+def deletar_linha_em_cascata(tabela, chave_primaria, valor_chave):
+    consulta_deletar = f"DELETE FROM {tabela} WHERE {chave_primaria} = '{valor_chave}'"
+    executar_consulta_(consulta_deletar)

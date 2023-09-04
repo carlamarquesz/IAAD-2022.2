@@ -10,9 +10,6 @@ inputs = {
     'FUNCIONARIO': ['Pnome', 'Minicial', 'Unome', 'Cpf', 'Datanasc', 'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'],
     'DEPARTAMENTO': ['Dnome', 'Dnumero', 'Cpf_gerente', 'Data_inicio_gerente'],
     'DEPENDENTE': ['Fcpf', 'Nome_dependente', 'Sexo', 'Datanasc', 'Parentesco'],
-    'PROJETO': ['Projnome', 'Projnumero', 'Projlocal', 'Dnum'],
-    'TRABALHA_EM': ['Fcpf', 'Pnr', 'Horas'],
-    'LOCALIZACAO_DEP': ['Dnumero', 'Dlocal']
 }
 
 def forms(inputs, operation_crud):
@@ -36,6 +33,7 @@ def main():
     control_panel = st.sidebar.radio("Opções:", tabelas)
 
     with aba1:
+        campos = []
         st.header(f"Inserir dados em {control_panel}")
         if control_panel == 'funcionario':
             campos = {'Pnome', 'Minicial', 'Unome', 'Cpf', 
@@ -50,12 +48,15 @@ def main():
             valor = st.text_input(f"{campo.capitalize()}:")
             campos_insert[campo] = valor
 
-        if st.button("Inserir Dados"):
-            if all(campos_insert.values()):
-                inserir_dados(control_panel, campos_insert)
-                st.success(f"Dados inseridos com sucesso em '{control_panel}': {campos_insert}")
-            else:
-                st.warning("Preencha todos os campos.")
+        try:
+            if st.button("Inserir Dados"):
+                if all(campos_insert.values()):
+                    inserir_dados(control_panel, campos_insert)
+                    st.success(f"Dados inseridos com sucesso em '{control_panel}': {campos_insert}")
+                else:
+                    st.warning("Preencha todos os campos.")
+        except Exception as e:
+            st.error(f"Ocorreu um erro: {e}")
 
             
 
@@ -77,14 +78,18 @@ def main():
             colunas = st.multiselect("Selecione as colunas", ['*'] + ['Fcpf', 'Nome_dependente', 
                                                                       'Sexo', 'Datanasc', 'Parentesco'])
         
-        if st.button("Executar Consulta"):
-            consulta_sql = criar_consulta(control_panel, colunas)
-            resultados = executar_consulta(consulta_sql)
+        try:
+            if st.button("Executar Consulta"):
+                consulta_sql = criar_consulta(control_panel, colunas)
+                resultados = executar_consulta(consulta_sql)
+                
+                st.write("Resultados da Consulta:")
+                st.dataframe(resultados)
+            else:
+                st.write("Nenhum resultado encontrado.")
             
-            st.write("Resultados da Consulta:")
-            st.dataframe(resultados)
-        else:
-            st.write("Nenhum resultado encontrado.")
+        except Exception as e:
+            st.error(f"Ocorreu um erro na consulta: {e}")
 
     with aba3:
         st.title("atualização dos dados")
@@ -126,17 +131,19 @@ def main():
                         for coluna in colunas_atualizar:
                             novo_valor = st.text_input(f"Novo valor para '{coluna}':", dados_funcionario.iloc[0][coluna])
                             dados_funcionario.loc[0, coluna] = novo_valor
-
-                        if st.button("Atualizar Dados"):
-                            # Montar a consulta de atualização dinamicamente
-                            consulta_atualizacao = f"UPDATE {control_panel} SET "
-                            for coluna in colunas_atualizar:
-                                valor_atual = dados_funcionario.iloc[0][coluna]
-                                consulta_atualizacao += f"{coluna} = '{valor_atual}', "
-                            consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
-                            consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
-                            executar_consulta_(consulta_atualizacao)
-                            st.success("Dados do funcionário atualizados com sucesso!")
+                        try: 
+                            if st.button("Atualizar Dados"):
+                                # Montar a consulta de atualização dinamicamente
+                                consulta_atualizacao = f"UPDATE {control_panel} SET "
+                                for coluna in colunas_atualizar:
+                                    valor_atual = dados_funcionario.iloc[0][coluna]
+                                    consulta_atualizacao += f"{coluna} = '{valor_atual}', "
+                                consulta_atualizacao = consulta_atualizacao[:-2]  # Remover a vírgula extra no final
+                                consulta_atualizacao += f" WHERE {chave_primaria_selecionada} = '{valor_chave_selecionado}'"
+                                executar_consulta_(consulta_atualizacao)
+                                st.success("Dados do funcionário atualizados com sucesso!")
+                        except Exception as e:
+                                st.error(f"Ocorreu um erro na atualização: {e}")
                     else:
                         st.warning("Selecione pelo menos uma coluna para atualizar.")
                 else:
@@ -183,11 +190,14 @@ def main():
                         colunas1 = [desc[0] for desc in cursor.description]
                         coluna_selecionada1 = st.selectbox("Selecione a coluna a ser deletada:", colunas1)
 
-                        if st.button("Deletar Coluna"):
-                            # Consulta SQL para deletar a coluna específica
-                            consulta_deletar_coluna = f"UPDATE {control_panel} SET {coluna_selecionada1} = NULL WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
-                            executar_consulta_(consulta_deletar_coluna)
-                            st.success(f"Coluna '{coluna_selecionada1}' deletada com sucesso do registro com {chave_primaria_selecionada1} igual a '{valor_chave_selecionado1}' em '{control_panel}'.")
+                        try:
+                            if st.button("Deletar Coluna"):
+                                # Consulta SQL para deletar a coluna específica
+                                consulta_deletar_coluna = f"UPDATE {control_panel} SET {coluna_selecionada1} = NULL WHERE {chave_primaria_selecionada1} = '{valor_chave_selecionado1}'"
+                                executar_consulta_(consulta_deletar_coluna)
+                                st.success(f"Coluna '{coluna_selecionada1}' deletada com sucesso do registro com {chave_primaria_selecionada1} igual a '{valor_chave_selecionado1}' em '{control_panel}'.")
+                        except Exception as e:
+                                st.error(f"Ocorreu um erro na exclusão: {e}")
                     else:
                         st.warning("Registro não encontrado.")
                 else:
@@ -195,6 +205,37 @@ def main():
             else:
                 st.warning("Selecione uma chave primária.")
         
+            st.header('Delete em casacada da linha inteira')
+            
+
+            # Consulta SQL para obter as chaves primárias da tabela selecionada
+            consulta_chaves2 = f"SHOW KEYS FROM {control_panel} WHERE Key_name = 'PRIMARY'"
+            conn = connection
+            cursor.execute(consulta_chaves2)
+            chaves_primarias2 = [row[4] for row in cursor.fetchall()]
+            
+
+            chave_primaria_selecionada2 = st.selectbox("Selecione a chave primária:", chaves_primarias2, key='select_delete')
+
+            if chave_primaria_selecionada2:
+                # Consulta SQL para listar todos os valores da chave primária
+                consulta_valores_chave2 = f"SELECT DISTINCT {chave_primaria_selecionada2} FROM {control_panel}"
+                conn = connection
+                cursor.execute(consulta_valores_chave2)
+                valores_chave2 = [row[0] for row in cursor.fetchall()]
+                
+
+                valor_chave_selecionado2 = st.selectbox(f"Selecione o valor da chave primária para deletar em '{control_panel}':", valores_chave2, key="select_delete1")
+
+                if st.button("Deletar Linha em Cascata"):
+                    if valor_chave_selecionado2:
+                        deletar_linha_em_cascata(control_panel, chave_primaria_selecionada2, valor_chave_selecionado2)
+                        st.success(f"Linha em cascata deletada com sucesso em '{control_panel}' com {chave_primaria_selecionada2} igual a '{valor_chave_selecionado2}'.")
+                    else:
+                        st.warning("Selecione um valor da chave primária.")
+            else:
+                st.warning("Selecione uma chave primária.")
+
             
 if __name__ == "__main__":
     main()
