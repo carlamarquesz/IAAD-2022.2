@@ -10,9 +10,6 @@ inputs = {
     'FUNCIONARIO': ['Pnome', 'Minicial', 'Unome', 'Cpf', 'Datanasc', 'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'],
     'DEPARTAMENTO': ['Dnome', 'Dnumero', 'Cpf_gerente', 'Data_inicio_gerente'],
     'DEPENDENTE': ['Fcpf', 'Nome_dependente', 'Sexo', 'Datanasc', 'Parentesco'],
-    'PROJETO': ['Projnome', 'Projnumero', 'Projlocal', 'Dnum'],
-    'TRABALHA_EM': ['Fcpf', 'Pnr', 'Horas'],
-    'LOCALIZACAO_DEP': ['Dnumero', 'Dlocal']
 }
 
 def forms(inputs, operation_crud):
@@ -38,13 +35,13 @@ def main():
     with aba1:
         campos = []
         st.header(f"Inserir dados em {control_panel}")
-        if control_panel == 'FUNCIONARIO':
+        if control_panel == 'funcionario':
             campos = {'Pnome', 'Minicial', 'Unome', 'Cpf', 
                       'Datanasc', 'Endereco', 'Sexo', 'Salario', 
                       'Cpf_supervisor', 'Dnr'}
-        elif control_panel == 'DEPARTAMENTO':
+        elif control_panel == 'departamento':
             campos = {'Dnome', 'Dnumero', 'Cpf_gerente', 'Data_inicio_gerente'}
-        elif control_panel == 'DEPENDENTE':
+        elif control_panel == 'dependente':
             campos = {'Fcpf', 'Nome_dependente', 'Sexo', 'Datanasc', 'Parentesco'}
         campos_insert = {}
         for campo in campos:  # Substitua com seus campos
@@ -65,19 +62,19 @@ def main():
 
     with aba2:
         st.title("Consultas")
-        if control_panel == 'FUNCIONARIO':
-            control_panel = 'FUNCIONARIO'
+        if control_panel == 'funcionario':
+            control_panel = 'funcionario'
             colunas = st.multiselect("selecione as colunas",['*']+['Pnome', 
                                      'Minicial', 'Unome', 'Cpf', 'Datanasc', 
                                      'Endereco', 'Sexo', 'Salario', 'Cpf_supervisor', 'Dnr'])
-        elif control_panel == 'DEPARTAMENTO':
-            control_panel = 'DEPARTAMENTO'
+        elif control_panel == 'departamento':
+            control_panel = 'departamento'
             colunas = st.multiselect("Selecione as colunas",['*'] + ['Dnome', 'Dnumero', 
                                                                      'Cpf_gerente', 'Data_inicio_gerente'])
             
             
-        elif control_panel == 'DEPENDENTE':
-            control_panel = 'DEPENDENTE'
+        elif control_panel == 'dependente':
+            control_panel = 'dependente'
             colunas = st.multiselect("Selecione as colunas", ['*'] + ['Fcpf', 'Nome_dependente', 
                                                                       'Sexo', 'Datanasc', 'Parentesco'])
         
@@ -208,6 +205,37 @@ def main():
             else:
                 st.warning("Selecione uma chave primária.")
         
+            st.header('Delete em casacada da linha inteira')
+            
+
+            # Consulta SQL para obter as chaves primárias da tabela selecionada
+            consulta_chaves2 = f"SHOW KEYS FROM {control_panel} WHERE Key_name = 'PRIMARY'"
+            conn = connection
+            cursor.execute(consulta_chaves2)
+            chaves_primarias2 = [row[4] for row in cursor.fetchall()]
+            
+
+            chave_primaria_selecionada2 = st.selectbox("Selecione a chave primária:", chaves_primarias2, key='select_delete')
+
+            if chave_primaria_selecionada2:
+                # Consulta SQL para listar todos os valores da chave primária
+                consulta_valores_chave2 = f"SELECT DISTINCT {chave_primaria_selecionada2} FROM {control_panel}"
+                conn = connection
+                cursor.execute(consulta_valores_chave2)
+                valores_chave2 = [row[0] for row in cursor.fetchall()]
+                
+
+                valor_chave_selecionado2 = st.selectbox(f"Selecione o valor da chave primária para deletar em '{control_panel}':", valores_chave2, key="select_delete1")
+
+                if st.button("Deletar Linha em Cascata"):
+                    if valor_chave_selecionado2:
+                        deletar_linha_em_cascata(control_panel, chave_primaria_selecionada2, valor_chave_selecionado2)
+                        st.success(f"Linha em cascata deletada com sucesso em '{control_panel}' com {chave_primaria_selecionada2} igual a '{valor_chave_selecionado2}'.")
+                    else:
+                        st.warning("Selecione um valor da chave primária.")
+            else:
+                st.warning("Selecione uma chave primária.")
+
             
 if __name__ == "__main__":
     main()
