@@ -2,8 +2,8 @@
 -- Script do Banco de Dados Empresa 
 
 begin;
-create schema Empresa_IAAD; -- Pode usar o comando 'create database empresa_seunome;' (São semelhantes!)
-use Empresa_IAAD;
+create schema empresa_adaptado; -- Pode usar o comando 'create database empresa_seunome;' (São semelhantes!)
+use empresa_adaptado;
 
 -- Criando as tabelas
 create table FUNCIONARIO(
@@ -56,8 +56,8 @@ insert into DEPENDENTE values
 	('12345678966', 'Elizabeth','F', '1967-05-05', 'Esposa');	
 
 -- Aplicando a restrição de integridade referencial (chaves estrangeiras - FK)
-alter table FUNCIONARIO	ADD FOREIGN KEY(Dnr) REFERENCES DEPARTAMENTO(Dnumero);
-alter table FUNCIONARIO	ADD FOREIGN KEY(Cpf_supervisor) REFERENCES FUNCIONARIO(Cpf);
-alter table DEPARTAMENTO ADD FOREIGN KEY(Cpf_gerente) REFERENCES FUNCIONARIO(Cpf);
-alter table DEPENDENTE ADD FOREIGN KEY(Fcpf) REFERENCES FUNCIONARIO(CPF);
+alter table FUNCIONARIO	ADD FOREIGN KEY(Dnr) REFERENCES DEPARTAMENTO(Dnumero) on update cascade on delete cascade;
+alter table FUNCIONARIO	ADD FOREIGN KEY(Cpf_supervisor) REFERENCES FUNCIONARIO(Cpf)on update cascade on delete cascade;
+alter table DEPARTAMENTO ADD FOREIGN KEY(Cpf_gerente) REFERENCES FUNCIONARIO(Cpf)on update cascade on delete cascade;
+alter table DEPENDENTE ADD FOREIGN KEY(Fcpf) REFERENCES FUNCIONARIO(CPF)on update cascade on delete cascade;
 commit;
