@@ -6,7 +6,7 @@ connection = mysql.connector.connect(
         host='127.0.0.1',
         user='root',
         password='saltitao1',
-        database='empresa_iaad'
+        database='empresa_adaptado'
     )
 cursor = connection.cursor()
 
@@ -92,3 +92,7 @@ def inserir_dados(tabela, campos):
 def deletar_linha_em_cascata(tabela, chave_primaria, valor_chave):
     consulta_deletar = f"DELETE FROM {tabela} WHERE {chave_primaria} = '{valor_chave}'"
     executar_consulta_(consulta_deletar)
+    
+def deletar_tabela(tabela):
+    consulta_deletar = f"DROP TABLE IF EXISTS {tabela}"
+    executar_consulta(consulta_deletar)

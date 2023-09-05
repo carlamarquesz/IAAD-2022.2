@@ -236,6 +236,13 @@ def main():
             else:
                 st.warning("Selecione uma chave primária.")
 
-            
+            st.header("drop table")
+            if control_panel:
+                st.header(f"Deletar Tabela '{control_panel}'")
+
+                if st.button("Deletar Tabela"):
+                    deletar_tabela(control_panel)
+                    st.success(f"Tabela '{control_panel}' deletada com sucesso.")
+                
 if __name__ == "__main__":
     main()
