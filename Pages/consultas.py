@@ -9,6 +9,7 @@ def main():
     st.title("Consulta Relacional Interativa")
 
     st.subheader("Selecionar Tabelas e Colunas")
+    st.write("consultas feitas aqui deverão envolver pelo menos duas tabelas, para consultas envolvendo somente uma tabela, utilizar o select do CRUD")
     tabelas = st.multiselect("Selecione as tabelas", ["funcionario", "departamento", "dependente"])
     colunas = st.multiselect("Selecione as colunas", ["*"] + ["Pnome", "Minicial", "Unome", "Cpf", 
                                                               "Datanasc", "Endereco", "Sexo",
